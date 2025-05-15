@@ -11,16 +11,14 @@ struct SummonerDto: Decodable {
     let id: String
     let accountId: String
     let puuid: String
-    let name: String
     let profileIconId: Int
-    let revisionDate: Int64
+    let revisionDate: Int
     let summonerLevel: Int
 
     enum CodingKeys: String, CodingKey {
         case id
         case accountId
         case puuid
-        case name
         case profileIconId
         case revisionDate
         case summonerLevel
@@ -31,9 +29,8 @@ struct SummonerDto: Decodable {
         self.id = try container.decode(String.self, forKey: .id)
         self.accountId = try container.decode(String.self, forKey: .accountId)
         self.puuid = try container.decode(String.self, forKey: .puuid)
-        self.name = try container.decode(String.self, forKey: .name)
         self.profileIconId = try container.decode(Int.self, forKey: .profileIconId)
-        self.revisionDate = try container.decode(Int64.self, forKey: .revisionDate)
+        self.revisionDate = try container.decode(Int.self, forKey: .revisionDate)
         self.summonerLevel = try container.decode(Int.self, forKey: .summonerLevel)
     }
 }
