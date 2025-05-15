@@ -1,5 +1,5 @@
 //
-//  FetchAccount.swift
+//  FetchGame.swift
 //  SummonerScroll
 //
 //  Created by SDV Bordeaux on 15/05/2025.
@@ -7,10 +7,8 @@
 
 import Foundation
 
-let apiKey = "YOUR_RIOT_API_KEY"
-
-func getPuuid(forSummonerName summonerName: String, tag: String) async throws -> String {
-    let urlString = "https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/\(summonerName)%23\(tag)"
+func getLast5Matches(puuid: String) async throws -> [String] {
+    let urlString = "https://na1.api.riotgames.com/lol/match/v5/matches/by-puuid/\(puuid)/ids?count=5"
     guard let url = URL(string: urlString) else {
         throw URLError(.badURL)
     }
@@ -24,12 +22,12 @@ func getPuuid(forSummonerName summonerName: String, tag: String) async throws ->
         throw URLError(.badServerResponse)
     }
 
-    let summonerInfo = try JSONDecoder().decode(RiotAccountDto.self, from: data)
-    return summonerInfo.puuid
+    let matchIdsResponse = try JSONDecoder().decode([String].self, from: data)
+    return matchIdsResponse
 }
 
-func getAccountInfo(forPuuid puuid: String) async throws -> SummonerDto {
-    let urlString = "https://na1.api.riotgames.com/lol/league/v4/entries/by-account/\(puuid)"
+func getMatchDetails(matchId: String) async throws -> MatchDto {
+    let urlString = "https://na1.api.riotgames.com/lol/match/v5/matches/\(matchId)"
     guard let url = URL(string: urlString) else {
         throw URLError(.badURL)
     }
@@ -43,13 +41,16 @@ func getAccountInfo(forPuuid puuid: String) async throws -> SummonerDto {
         throw URLError(.badServerResponse)
     }
 
-    let accountInfo = try JSONDecoder().decode([SummonerDto].self, from: data)
-    
-    return accountInfo.first!
+    let matchDetails = try JSONDecoder().decode(MatchDto.self, from: data)
+    return matchDetails
 }
 
-func getAccountInfoFromPuuid(forSummonerName summonerName: String, tag: String) async throws -> SummonerDto {
-    let accountPuuid: String = try await getPuuid(forSummonerName: summonerName, tag: tag)
-    
-    return try await getAccountInfo(forPuuid: accountPuuid)
+func getLastFiveMatchesData(puuid: String) async throws -> [MatchDto] {
+    let matchIds = try await getLast5Matches(puuid: puuid)
+    var matchDetails: [MatchDto] = []
+    for matchId in matchIds {
+        let matchDetail = try await getMatchDetails(matchId: matchId)
+        matchDetails.append(matchDetail)
+    }
+    return matchDetails
 }
