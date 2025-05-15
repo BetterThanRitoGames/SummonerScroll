@@ -11,14 +11,40 @@ import Foundation
 struct MatchDto: Decodable {
     let metadata: MetadataDto
     let info: InfoDto
+
+    enum CodingKeys: String, CodingKey {
+        case metadata
+        case info
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        metadata = try container.decode(MetadataDto.self, forKey: .metadata)
+        info = try container.decode(InfoDto.self, forKey: .info)
+    }
 }
+
 
 // MARK: - MetadataDto
 struct MetadataDto: Decodable {
     let dataVersion: String
     let matchId: String
     let participants: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case dataVersion
+        case matchId
+        case participants
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        dataVersion = try container.decode(String.self, forKey: .dataVersion)
+        matchId = try container.decode(String.self, forKey: .matchId)
+        participants = try container.decode([String].self, forKey: .participants)
+    }
 }
+
 
 // MARK: - InfoDto
 struct InfoDto: Decodable {
@@ -37,7 +63,33 @@ struct InfoDto: Decodable {
     let queueId: Int
     let teams: [TeamDto]
     let tournamentCode: String?
+
+    enum CodingKeys: String, CodingKey {
+        case gameCreation, gameDuration, gameEndTimestamp, gameId, gameMode, gameName,
+             gameStartTimestamp, gameType, gameVersion, mapId, participants, platformId,
+             queueId, teams, tournamentCode
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        gameCreation = try container.decode(Int64.self, forKey: .gameCreation)
+        gameDuration = try container.decode(Int.self, forKey: .gameDuration)
+        gameEndTimestamp = try container.decode(Int64.self, forKey: .gameEndTimestamp)
+        gameId = try container.decode(Int64.self, forKey: .gameId)
+        gameMode = try container.decode(String.self, forKey: .gameMode)
+        gameName = try container.decode(String.self, forKey: .gameName)
+        gameStartTimestamp = try container.decode(Int64.self, forKey: .gameStartTimestamp)
+        gameType = try container.decode(String.self, forKey: .gameType)
+        gameVersion = try container.decode(String.self, forKey: .gameVersion)
+        mapId = try container.decode(Int.self, forKey: .mapId)
+        participants = try container.decode([ParticipantDto].self, forKey: .participants)
+        platformId = try container.decode(String.self, forKey: .platformId)
+        queueId = try container.decode(Int.self, forKey: .queueId)
+        teams = try container.decode([TeamDto].self, forKey: .teams)
+        tournamentCode = try container.decodeIfPresent(String.self, forKey: .tournamentCode)
+    }
 }
+
 
 // MARK: - ParticipantDto
 struct ParticipantDto: Decodable {
@@ -152,6 +204,11 @@ struct ParticipantDto: Decodable {
 struct PerksDto: Decodable {
     let statPerks: StatPerksDto
     let styles: [PerkStyleDto]
+
+    enum CodingKeys: String, CodingKey {
+        case statPerks
+        case styles
+    }
 }
 
 // MARK: - StatPerksDto
@@ -159,6 +216,12 @@ struct StatPerksDto: Decodable {
     let defense: Int
     let flex: Int
     let offense: Int
+
+    enum CodingKeys: String, CodingKey {
+        case defense
+        case flex
+        case offense
+    }
 }
 
 // MARK: - PerkStyleDto
@@ -166,6 +229,12 @@ struct PerkStyleDto: Decodable {
     let description: String
     let selections: [PerkStyleSelectionDto]
     let style: Int
+
+    enum CodingKeys: String, CodingKey {
+        case description
+        case selections
+        case style
+    }
 }
 
 // MARK: - PerkStyleSelectionDto
@@ -174,7 +243,15 @@ struct PerkStyleSelectionDto: Decodable {
     let var1: Int
     let var2: Int
     let var3: Int
+
+    enum CodingKeys: String, CodingKey {
+        case perk
+        case var1
+        case var2
+        case var3
+    }
 }
+
 
 // MARK: - TeamDto
 struct TeamDto: Decodable {
