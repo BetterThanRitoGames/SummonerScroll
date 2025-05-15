@@ -29,9 +29,23 @@
 		5A1EFBB02DD5D61100877FF0 /* SummonerScrollUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SummonerScrollUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		5A2F327D2DD61221007254CE /* Exceptions for "SummonerScroll" folder in "SummonerScroll" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"dragontail-15.10.1/15.10.1/manifest.js",
+				"dragontail-15.10.1/15.10.1/manifest.json",
+			);
+			target = 5A1EFB982DD5D61000877FF0 /* SummonerScroll */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		5A1EFB9B2DD5D61000877FF0 /* SummonerScroll */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				5A2F327D2DD61221007254CE /* Exceptions for "SummonerScroll" folder in "SummonerScroll" target */,
+			);
 			path = SummonerScroll;
 			sourceTree = "<group>";
 		};
