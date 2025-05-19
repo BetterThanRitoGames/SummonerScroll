@@ -1,4 +1,4 @@
-LAJOINIE Elie, LAGNEAUX Arthur et AVI Timéo
+# **LAJOINIE Elie, LAGNEAUX Arthur et AVI Timéo**
 
 # 🧙‍♂️ SummonerScroll
 
