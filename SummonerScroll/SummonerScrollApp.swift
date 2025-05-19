@@ -1,17 +1,14 @@
-//
-//  SummonerScrollApp.swift
-//  SummonerScroll
-//
-//  Created by SDV Bordeaux on 15/05/2025.
-//
 
 import SwiftUI
 
 @main
 struct SummonerScrollApp: App {
+    @StateObject private var session = UserSession()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(session)
         }
     }
 }

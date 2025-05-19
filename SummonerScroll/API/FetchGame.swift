@@ -7,50 +7,68 @@
 
 import Foundation
 
-func getLast5Matches(puuid: String) async throws -> [String] {
-    let urlString = "https://na1.api.riotgames.com/lol/match/v5/matches/by-puuid/\(puuid)/ids?count=5"
+func getLastMatches(puuid: String, start: Int, count: Int, region: APIRegion) async throws -> [String] {
+    let urlString = "https://\(region.rawValue).api.riotgames.com/lol/match/v5/matches/by-puuid/\(puuid)/ids?type=ranked&start=\(start)&count=\(count)&api_key=\(apiKey)"
     guard let url = URL(string: urlString) else {
         throw URLError(.badURL)
     }
 
-    var request = URLRequest(url: url)
-    request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+    let request = URLRequest(url: url)
 
     let (data, response) = try await URLSession.shared.data(for: request)
 
-    guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+    guard let httpResponse = response as? HTTPURLResponse else {
         throw URLError(.badServerResponse)
     }
 
-    let matchIdsResponse = try JSONDecoder().decode([String].self, from: data)
-    return matchIdsResponse
+    if httpResponse.statusCode != 200 {
+        if let apiError = try? JSONDecoder().decode(ApiError.self, from: data) {
+            throw apiError
+        } else {
+            throw URLError(.badServerResponse)
+        }
+    }
+
+    return try JSONDecoder().decode([String].self, from: data)
 }
 
-func getMatchDetails(matchId: String) async throws -> MatchDto {
-    let urlString = "https://na1.api.riotgames.com/lol/match/v5/matches/\(matchId)"
+func getMatchDetails(matchId: String, region: APIRegion) async throws -> MatchDto {
+    let urlString = "https://\(region.rawValue).api.riotgames.com/lol/match/v5/matches/\(matchId)?api_key=\(apiKey)"
     guard let url = URL(string: urlString) else {
         throw URLError(.badURL)
     }
 
-    var request = URLRequest(url: url)
-    request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+    let request = URLRequest(url: url)
 
     let (data, response) = try await URLSession.shared.data(for: request)
 
     guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+        print(response)
         throw URLError(.badServerResponse)
     }
 
-    let matchDetails = try JSONDecoder().decode(MatchDto.self, from: data)
-    return matchDetails
+    do {
+        let matchDetails = try JSONDecoder().decode(MatchDto.self, from: data)
+        return matchDetails
+    } catch {
+        let errorMessage = "Failed to decode response: \(error)"
+        let errorData = String(data: data, encoding: .utf8) ?? "No data"
+
+        print("Error decoding account info: \(errorMessage)")
+        print("Response data: \(errorData)")
+
+        throw error
+    }
+    
 }
 
-func getLastFiveMatchesData(puuid: String) async throws -> [MatchDto] {
-    let matchIds = try await getLast5Matches(puuid: puuid)
+func getLastMatchesData(puuid: String, start: Int, count: Int, region: APIRegion) async throws -> [MatchDto] {
+    let matchIds = try await getLastMatches(puuid: puuid, start: start, count: count, region: region)
     var matchDetails: [MatchDto] = []
     for matchId in matchIds {
-        let matchDetail = try await getMatchDetails(matchId: matchId)
+        let matchDetail = try await getMatchDetails(matchId: matchId, region: region)
         matchDetails.append(matchDetail)
     }
     return matchDetails
 }
+

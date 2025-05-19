@@ -1,11 +1,22 @@
 import Foundation
 
-let apiKey = "RGAPI-6897bb76-447b-4856-96f2-ddf546f5ef21"
+let apiKey = ProcessInfo.processInfo.environment["RIOT_API_KEY"] ?? ""
+
+enum APIRegion: String, CaseIterable, Identifiable {
+    case americas, europe, asia, sea
+    var id: String { rawValue }
+}
+
+enum Servers: String, CaseIterable, Identifiable {
+    case euw1, na1, eun1, kr, br1, oc1, ru, sg2, tr1, tw2, vn2
+    var id: String { rawValue }
+}
+
 
 class RiotService {
     
-    func getPuuid(forSummonerName summonerName: String, tag: String) async throws -> RiotAccountDto {
-        let urlString = "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/\(summonerName)/\(tag)?api_key=\(apiKey)"
+    func getPuuid(forSummonerName summonerName: String, tag: String, region: APIRegion) async throws -> RiotAccountDto {
+        let urlString = "https://\(region.rawValue).api.riotgames.com/riot/account/v1/accounts/by-riot-id/\(summonerName)/\(tag)?api_key=\(apiKey)"
         guard let url = URL(string: urlString) else {
             throw URLError(.badURL)
         }
@@ -14,17 +25,23 @@ class RiotService {
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            print(response)
+        guard let httpResponse = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }
 
-        let summonerInfo = try JSONDecoder().decode(RiotAccountDto.self, from: data)
-        return summonerInfo
+        if httpResponse.statusCode != 200 {
+            if let apiError = try? JSONDecoder().decode(ApiError.self, from: data) {
+                throw apiError
+            } else {
+                throw URLError(.badServerResponse)
+            }
+        }
+
+        return try JSONDecoder().decode(RiotAccountDto.self, from: data)
     }
 
-    func getAccountInfo(forPuuid puuid: String) async throws -> SummonerDto {
-        let urlString = "https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/\(puuid)?api_key=\(apiKey)"
+    func getAccountInfo(forPuuid puuid: String, server: Servers) async throws -> SummonerDto {
+        let urlString = "https://\(server.rawValue).api.riotgames.com/lol/summoner/v4/summoners/by-puuid/\(puuid)?api_key=\(apiKey)"
         guard let url = URL(string: urlString) else {
             throw URLError(.badURL)
         }
@@ -33,30 +50,24 @@ class RiotService {
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            print(response)
-
+        guard let httpResponse = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }
-        
-        do {
-            let accountInfo = try JSONDecoder().decode(SummonerDto.self, from: data)
-            print ("Decoded account info: \(accountInfo)")
-            return accountInfo
-        } catch {
-            let errorMessage = "Failed to decode response: \(error)"
-            let errorData = String(data: data, encoding: .utf8) ?? "No data"
 
-            print("Error decoding account info: \(errorMessage)")
-            print("Response data: \(errorData)")
-
-            throw error
+        if httpResponse.statusCode != 200 {
+            if let apiError = try? JSONDecoder().decode(ApiError.self, from: data) {
+                throw apiError
+            } else {
+                throw URLError(.badServerResponse)
+            }
         }
+
+        return try JSONDecoder().decode(SummonerDto.self, from: data)
     }
 
-    func getAccountInfoFromPuuid(forSummonerName summonerName: String, tag: String) async throws -> (RiotAccountDto, SummonerDto) {
-        let account = try await getPuuid(forSummonerName: summonerName, tag: tag)
-        let summoner = try await getAccountInfo(forPuuid: account.puuid)
+    func getAccountInfoFromPuuid(forSummonerName summonerName: String, tag: String, server: Servers, region: APIRegion) async throws -> (RiotAccountDto, SummonerDto) {
+        let account = try await getPuuid(forSummonerName: summonerName, tag: tag, region: region)
+        let summoner = try await getAccountInfo(forPuuid: account.puuid, server: server)
         return (account, summoner)
     }
 }
